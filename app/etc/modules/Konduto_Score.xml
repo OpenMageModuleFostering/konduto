@@ -3,7 +3,7 @@
     <modules>
         <Konduto_Score>
             <active>true</active>
-            <codePool>local</codePool>
+            <codePool>community</codePool>
         </Konduto_Score>
     </modules>
 </config> 
