@@ -122,54 +122,58 @@ class Konduto_Score_Helper_Order extends Mage_Core_Helper_Abstract {
         $payment = $model->getPayment();
         $instance = $payment->getMethodInstance();
         $ccNumber = $instance->getInfoInstance()->getCcNumber();
-        $use = false;
         $cc_six = substr($ccNumber, 0, 6);
+
+        if ((strlen($payment->getCcExpMonth()) == 1) && ($payment->getCcExpYear())) { 
+            $expiration_date = "0" . $payment->getCcExpMonth() . $payment->getCcExpYear();
+        }
+        else if ((strlen($payment->getCcExpMonth()) == 2) && ($payment->getCcExpYear())) {
+            $expiration_date = $payment->getCcExpMonth() . $payment->getCcExpYear();
+        }
+        else { $expiration_date = null; }
+
+        $ret = array(
+            "type" => "credit",
+            "status" => "pending",
+            "expiration_date" => $expiration_date
+        );
 
         switch ($payment->getMethod()) {
             case 'authorizenet':
-                $use = true;
+                $ret["include"] = true;
                 $cards_data = array_values($payment->getAdditionalInformation('authorize_cards'));
                 $card_data = $cards_data[0];
-                $last4 = $card_data['cc_last4'];
+                $ret['last4'] = $card_data['cc_last4'];
                 $credit_card_company = $card_data['cc_type'];
                 break;
 
             case 'paypal_direct':
-                $use = true;
-                $last4 = $payment->getCcLast4();
+                $ret["include"] = true;
+                $ret['last4'] = $payment->getCcLast4();
                 $credit_card_company = $payment->getCcType();
                 break;
 
             case 'sagepaydirectpro':
-                $use = true;
+                $ret["include"] = true;
                 $sage = $model->getSagepayInfo();
-                $last4 = $sage->getData('last_four_digits');
+                $ret['last4'] = $sage->getData('last_four_digits');
                 $credit_card_company = $sage->getData('card_type');
                 break;
 
+            case 'paypal_express':
+            case 'paypal_standard':
+                $ret["include"] = true;
+                $last4 = null;
+                break;
+
             default:
-                $last4 = $payment->getCcLast4();
-                if ($last4) { $use = true; }
+                $ret["last4"] = $payment->getCcLast4();
+                if (($ret["last4"]) && (strlen($ret["last4"]) > 0)) { $ret["include"] = true; }
                 $credit_card_company = $payment->getCcType();
                 break;
         }
 
-        if (strlen($payment->getCcExpMonth()) < 2) {
-            $month = "0" . $payment->getCcExpMonth();
-        } else {
-            $month = $payment->getCcExpMonth();
-        }
-
-
-        $ret = array(
-            "include" => $use,
-            "type" => 'credit',
-            "last4" => $last4,
-            "expiration_date" => $month . $payment->getCcExpYear(),
-            "status" => "pending"
-        );
         if ((is_string($cc_six)) && (strlen($cc_six)==6)) { $ret["bin"] = $cc_six; }
-
         return $ret;
     }
 
