@@ -8,8 +8,13 @@ class Konduto_Score_Helper_Order extends Mage_Core_Helper_Abstract {
         $order_id = "Try-".$order->getIncrementId()."-".uniqid();
         $currency = $odm->getQuoteCurrencyCode();
         $payment = $this->getPaymentDetails($order);
-        if (!$payment['include']) { return; }
-        $payment['status'] = "declined";
+        if (!$payment['include']) { 
+          Mage::getSingleton('core/session')->unsScorePrepared();
+          if (Mage::getStoreConfig("scoreoptions/messages/debug")) {
+            Mage::log('No credit card detected. Will not send for analysis.', null, 'konduto.log');
+          }
+          return;
+        }
         unset($payment['include']);
         $billing = $order->getBillingAddress()->getData();
         $shipping = $order->getShippingAddress()->getData();
@@ -74,6 +79,14 @@ class Konduto_Score_Helper_Order extends Mage_Core_Helper_Abstract {
 
     public function setOrderPayment($order) {
         $data = unserialize(Mage::getSingleton('core/session')->getScoreData());
+        if ((!isset($data)) || (!$data)) { 
+          Mage::getSingleton('core/session')->unsScorePrepared();
+          Mage::getSingleton('core/session')->unsScoreData();
+          if (Mage::getStoreConfig("scoreoptions/messages/debug")) {
+            Mage::log('No serialized data found. Aborting...', null, 'konduto.log');
+          }
+          return;
+        }
         $data['id'] = $order->getIncrementId();
         $data['payment'][0]['status'] = "pending";
         $data['analyze'] = true;
@@ -83,6 +96,14 @@ class Konduto_Score_Helper_Order extends Mage_Core_Helper_Abstract {
     
     public function fireRequest() {
         $data = unserialize(Mage::getSingleton('core/session')->getScoreData());
+        if ((!isset($data)) || (!$data)) {
+          Mage::getSingleton('core/session')->unsScorePrepared();
+          Mage::getSingleton('core/session')->unsScoreData();
+          if (Mage::getStoreConfig("scoreoptions/messages/debug")) {
+            Mage::log('No serialized data found. Aborting...', null, 'konduto.log');
+          }
+          return;
+        }
         if (isset($data['oid'])) { 
           $oid = $data['oid'];
           unset($data['oid']);
@@ -90,7 +111,7 @@ class Konduto_Score_Helper_Order extends Mage_Core_Helper_Abstract {
         $data = json_encode($data);
         $header = array();
         $header[] = 'Content-type: application/json; charset=utf-8';
-        $header[] = 'X-Requested-With: Magento v1.5.2';
+        $header[] = 'X-Requested-With: Magento v1.5.4';
         $mode = Mage::getStoreConfig('scoreoptions/messages/mode');
         if ($mode == 1) {
             $private = Mage::getStoreConfig('scoreoptions/messages/productionprikey');
@@ -125,7 +146,6 @@ class Konduto_Score_Helper_Order extends Mage_Core_Helper_Abstract {
         
         if (isset($oid)) {
           $save = $this->saveData($data, $resp, $oid);
-          Mage::getSingleton('core/session')->unsScoreAttempt();
         }
     }
 
@@ -135,6 +155,8 @@ class Konduto_Score_Helper_Order extends Mage_Core_Helper_Abstract {
         $ccNumber = is_numeric($cc) ? $cc : Mage::helper('core')->decrypt($cc);
         $cc_six = substr($ccNumber, 0, 6);
         $ret["type"] = "credit";
+        $ret["include"] = false;
+        $ret['status'] = "declined";
         if (($payment->getCcExpMonth()) && ($payment->getCcExpYear())) {
           $ret["expiration_date"] = sprintf("%02d", $payment->getCcExpMonth()) . $payment->getCcExpYear();
         }        
@@ -177,9 +199,12 @@ class Konduto_Score_Helper_Order extends Mage_Core_Helper_Abstract {
         return $ret;
     }
     
-    public function getVisitorId() {
-        $cookie = json_decode($_COOKIE['_kdt'], true);
-        return $cookie['i'];
+    public function getVisitorId($id = NULL) {
+        if (isset($_COOKIE['_kdt'])) {
+          $cookie = json_decode($_COOKIE['_kdt'], true);
+          $id = $cookie['i'];
+        }
+        return $id;
     }
 
     public function saveData($data, $resp, $id) {
