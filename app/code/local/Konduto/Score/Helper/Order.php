@@ -3,20 +3,14 @@
 class Konduto_Score_Helper_Order extends Mage_Core_Helper_Abstract {
 
     public function getOrderData($order, $visitor = NULL) {
-        if ($visitor == NULL) {
-            $visitor = $this->getVisitorId();
-        }
+        if ($visitor == NULL) { $visitor = $this->getVisitorId(); }
         $billing = $order->getBillingAddress()->getData();
         $shipping = $order->getShippingAddress()->getData();
         $od = $order->getId();
         $odm = Mage::getModel('sales/order')->load($od);
 
-        if ($odm->getCustomerId() == '' || $odm->getCustomerId() == NULL) {
-            $customer_id = $odm->getCustomerEmail();
-        } else {
-            $customer_id = $odm->getCustomerId();
-        }
-
+        if ($odm->getCustomerId() == '' || $odm->getCustomerId() == NULL) { $customer_id = $odm->getCustomerEmail(); }
+        else { $customer_id = $odm->getCustomerId(); }
 
         $data['id'] = $od;
         $data['total_amount'] = (float) $odm->getGrandTotal();
@@ -29,9 +23,7 @@ class Konduto_Score_Helper_Order extends Mage_Core_Helper_Abstract {
             'id' => $customer_id,
             'name' => $odm->getCustomerFirstname() . " " . $odm->getCustomerLastname(),
             'phone1' => $billing['telephone'],
-            'email' => $odm->getCustomerEmail(),
-            'new' => false,
-            'vip' => false
+            'email' => $odm->getCustomerEmail()
         );
         if (!($odm->getCustomerTaxvat() == NULL || $odm->getCustomerTaxvat() == " ")) {
             $data['customer']['tax_id'] = $odm->getCustomerTaxvat();
@@ -39,7 +31,6 @@ class Konduto_Score_Helper_Order extends Mage_Core_Helper_Abstract {
         $data['billing'] = array(
             'name' => $billing['firstname'] . " " . $billing['lastname'],
             'address1' => $billing['street'],
-            //            'address2'=>$billing[''],
             'city' => $billing['city'],
             'state' => $billing['region'],
             'zip' => $billing['postcode'],
@@ -48,7 +39,6 @@ class Konduto_Score_Helper_Order extends Mage_Core_Helper_Abstract {
         $data['shipping'] = array(
             'name' => $shipping['firstname'] . " " . $shipping['lastname'],
             'address1' => $shipping['street'],
-            //            'address2'=>$shipping[''],
             'city' => $shipping['city'],
             'state' => $shipping['region'],
             'zip' => $shipping['postcode'],
@@ -60,6 +50,7 @@ class Konduto_Score_Helper_Order extends Mage_Core_Helper_Abstract {
             unset($paymet['include']);
             $data['payment'][] = $paymet;
         }
+        else { return; }
 
         $items = $order->getAllItems();
         foreach ($items as $item) {
@@ -82,7 +73,6 @@ class Konduto_Score_Helper_Order extends Mage_Core_Helper_Abstract {
                 $data[$key] = array_filter($value);
             }
         }
-
 
         $response = $this->fireRequest($data);
     }
@@ -158,10 +148,8 @@ class Konduto_Score_Helper_Order extends Mage_Core_Helper_Abstract {
                 break;
 
             default:
-                if ($payment->getCcLast4()) {
-                    $use = true;
-                }
                 $last4 = $payment->getCcLast4();
+                if ($last4) { $use = true; }
                 $credit_card_company = $payment->getCcType();
                 break;
         }
@@ -180,9 +168,7 @@ class Konduto_Score_Helper_Order extends Mage_Core_Helper_Abstract {
             "expiration_date" => $month . $payment->getCcExpYear(),
             "status" => "pending"
         );
-        if ((is_string($cc_six)) && (strlen($cc_six)==6)) {
-            $ret["bin"] = $cc_six;
-        }
+        if ((is_string($cc_six)) && (strlen($cc_six)==6)) { $ret["bin"] = $cc_six; }
 
         return $ret;
     }
