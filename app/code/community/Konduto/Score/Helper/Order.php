@@ -12,7 +12,7 @@ class Konduto_Score_Helper_Order extends Mage_Core_Helper_Abstract {
         if ($odm->getCustomerId() == '' || $odm->getCustomerId() == NULL) { $customer_id = $odm->getCustomerEmail(); }
         else { $customer_id = $odm->getCustomerId(); }
 
-        $data['id'] = $od;
+        $data['id'] = substr($od,0,100);
         $data['total_amount'] = (float) $odm->getGrandTotal();
         $data['shipping_amount'] = (float) $odm->getShippingAmount();
         $data['tax_amount'] = (float) $odm->getTaxAmount();
@@ -20,29 +20,29 @@ class Konduto_Score_Helper_Order extends Mage_Core_Helper_Abstract {
         $data['visitor'] = $visitor;
         $data['ip'] = $odm->getRemoteIp();
         $data['customer'] = array(
-            'id' => $customer_id,
-            'name' => $odm->getCustomerFirstname() . " " . $odm->getCustomerLastname(),
-            'phone1' => $billing['telephone'],
-            'email' => $odm->getCustomerEmail()
+            'id' => substr($customer_id,0,100),
+            'name' => substr($odm->getCustomerFirstname() . " " . $odm->getCustomerLastname(),0,100),
+            'phone1' => substr($billing['telephone'],0,100),
+            'email' => substr($odm->getCustomerEmail(),0,100)
         );
         if (!($odm->getCustomerTaxvat() == NULL || $odm->getCustomerTaxvat() == " ")) {
-            $data['customer']['tax_id'] = $odm->getCustomerTaxvat();
+            $data['customer']['tax_id'] = substr($odm->getCustomerTaxvat(),0,100);
         }
         $data['billing'] = array(
-            'name' => $billing['firstname'] . " " . $billing['lastname'],
-            'address1' => $billing['street'],
-            'city' => $billing['city'],
-            'state' => $billing['region'],
-            'zip' => $billing['postcode'],
-            'country' => $billing['country_id']
+            'name' => substr($billing['firstname'] . " " . $billing['lastname'],0,100),
+            'address1' => substr($billing['street'],0,100),
+            'city' => substr($billing['city'],0,100),
+            'state' => substr($billing['region'],0,100),
+            'zip' => substr($billing['postcode'],0,100),
+            'country' => substr($billing['country_id'],0,100)
         );
         $data['shipping'] = array(
-            'name' => $shipping['firstname'] . " " . $shipping['lastname'],
-            'address1' => $shipping['street'],
-            'city' => $shipping['city'],
-            'state' => $shipping['region'],
-            'zip' => $shipping['postcode'],
-            'country' => $shipping['country_id']
+            'name' => substr($shipping['firstname'] . " " . $shipping['lastname'],0,100),
+            'address1' => substr($shipping['street'],0,255),
+            'city' => substr($shipping['city'],0,100),
+            'state' => substr($shipping['region'],0,100),
+            'zip' => substr($shipping['postcode'],0,100),
+            'country' => substr($shipping['country_id'],0,100)
         );
 
         $paymet = $this->getPaymentDetails($odm);
@@ -56,10 +56,10 @@ class Konduto_Score_Helper_Order extends Mage_Core_Helper_Abstract {
         foreach ($items as $item) {
             if ($item->getQtyToInvoice() > 0) {
                 $shopping_cart[] = array(
-                    'sku' => $item->getSku(),
-                    'product_code' => $item->getProductId(),
+                    'sku' => substr($item->getSku(),0,100),
+                    'product_code' => substr($item->getProductId(),0,100),
                     //'category' => 9999,
-                    'name' => $item->getName(),
+                    'name' => substr($item->getName(),0,100),
                     //'unit_cost' => $item->getPrice() * 1,
                     //'quantity' => (int) $item->getQtyToInvoice(),
                 );
