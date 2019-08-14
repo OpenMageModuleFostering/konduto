@@ -1,0 +1,16 @@
+{
+    "name": "OpenMageModuleFostering/Konduto",
+    "type": "magento-module",
+    "license": "OSLv3.0",
+    "homepage": "",
+    "description": "Konduto fraud detection service integration",
+    "authors": [
+    {
+        "name": "Konduto",
+        "email": "magentoconnect@konduto.com"
+    }
+],
+    "suggest": {
+        "magento-hackathon/magento-composer-installer": "*"
+    }
+}
