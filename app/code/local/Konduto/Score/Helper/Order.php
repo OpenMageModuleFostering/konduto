@@ -109,8 +109,8 @@ class Konduto_Score_Helper_Order extends Mage_Core_Helper_Abstract {
             CURLOPT_POST => 1,
             CURLOPT_POSTFIELDS => $data,
             CURLOPT_HTTPHEADER => $header,
-            CURLOPT_CONNECTTIMEOUT => 60,
-            CURLOPT_TIMEOUT => 60,
+            CURLOPT_CONNECTTIMEOUT => 30,
+            CURLOPT_TIMEOUT => 30,
             CURLOPT_SSL_VERIFYHOST => $sslVerify,
             CURLOPT_SSL_VERIFYPEER => $sslVerify
         ));
@@ -132,8 +132,8 @@ class Konduto_Score_Helper_Order extends Mage_Core_Helper_Abstract {
         $payment = $model->getPayment();
         $instance = $payment->getMethodInstance();
         $ccNumber = $instance->getInfoInstance()->getCcNumber();
-        $cc_six = substr($ccNumber, 0, 6);
         $use = false;
+        $cc_six = substr($ccNumber, 0, 6);
 
         switch ($payment->getMethod()) {
             case 'authorizenet':
@@ -176,12 +176,13 @@ class Konduto_Score_Helper_Order extends Mage_Core_Helper_Abstract {
         $ret = array(
             "include" => $use,
             "type" => 'credit',
-            "bin" => $cc_six,
             "last4" => $last4,
             "expiration_date" => $month . $payment->getCcExpYear(),
             "status" => "pending"
         );
-
+        if ((is_string($cc_six)) && (strlen($cc_six)==6)) {
+            $ret["bin"] = $cc_six;
+        }
 
         return $ret;
     }
@@ -225,7 +226,7 @@ class Konduto_Score_Helper_Order extends Mage_Core_Helper_Abstract {
         try {
             $model->save();
         } catch (Exception $exc) {
-            Mage::log('Error while saving data==>' . $exc, null, 'score_debug.log');
+            Mage::log('Error while saving data==>' . $exc, null, 'konduto.log');
         }
     }
 

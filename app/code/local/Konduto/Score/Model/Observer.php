@@ -1,5 +1,4 @@
 <?php
-
 class Konduto_Score_Model_Observer {
 
     public function getScore(Varien_Event_Observer $evt) {

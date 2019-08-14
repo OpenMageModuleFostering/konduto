@@ -114,7 +114,7 @@
             </score>
         </helpers>
         <events>
-            <checkout_type_onepage_save_order_after>
+            <sales_order_place_after>
                 <observers>
                     <get_konduto_score>
                         <type>singleton</type>
@@ -122,7 +122,7 @@
                         <method>getScore</method>
                     </get_konduto_score>
                 </observers>
-            </checkout_type_onepage_save_order_after>
+            </sales_order_place_after>
             <core_block_abstract_to_html_before>
                 <observers>
                     <konduto_invoice>
